@@ -1,0 +1,62 @@
+
+
+Este documento foi criado para a explicação do exemplo que faz uso da framework flask num container DOCKER para processar uma questão feita pelo utilizador e a respetiva resposta através de um post
+O código está criado no documento "main.py"
+
+Em:
+app = Flask(__name__)
+app_rag = App.from_config("configs.yaml")
+
+é feita a inicialização de duas apps diferentes, a "app" vai estar responsavel pela parte da api flask e a app_rag lida com a framework embedchain e usa o ficheiro "configs.yaml" para se inicializar.
+
+Formato ficheiro config.yaml:
+
+llm:
+  provider: gpt4all
+  config:
+    model: 'orca-mini-3b-gguf2-q4_0.gguf'
+    max_tokens: 1000
+    top_p: 1
+embedder:
+  provider: huggingface
+  config:
+    model: 'sentence-transformers/all-MiniLM-L6-v2'
+
+o tópico "llm" define a inicialização do Large Language Model, aqui estamos a definir que o providenciador é o gpt4all e depois a estabelecer algumas configurações para a execução desse modelo
+o "model" é o default para modelos locais da framework embedchain, mais exemplos de config files podem ser obtidos em https://github.com/embedchain/embedchain/tree/main/configs, tendo em atenção que a maior parte deles necessitam de api keys externas como a OPENAI API KEY
+o embedder vai ser o algoritmo que irá transformar os documentos locais (exemplo do tunelSecagem.pdf) ou paginas web em vetores que possam ser interpretados pelas LLMs
+
+
+def generate_response(question):
+    # Simple example of generating a respocnse based on the question
+    response = app_rag.query(question)
+    return response
+
+Nesta função é usado o metodo query da framework com a questão que vem do utilizador através do POST descrito abaixo:
+
+@app.route('/question', methods=['POST'])
+def question():
+    content = request.json
+    question_text = content.get('question')
+    if question_text:
+        response_text = generate_response(question_text)
+        response = {
+            "message": "Question received",
+            "question": question_text,
+            "response": response_text
+        }
+    else:
+        response = {
+            "message": "No question received"
+        }
+    return jsonify(response)
+
+Este post é bastante simples, há apenas um handling do json proveninte do post e é passado para a função "generate_response" que irá retornar a devida mensagem
+Para inicializar o container devemos certificar que o docker engine está a correr e depois fazer:
+docker build -t embedchain-app .
+docker run -p 5000:5000 embedchain-app
+
+
+Para correr um exemplo podemos fazer um post usando curl da seguinte forma:
+curl -X POST http://127.0.0.1:5000/question -H "Content-Type: application/json" -d '{"question":"What is the drying tunnel?"}'
+
