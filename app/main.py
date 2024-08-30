@@ -37,4 +37,4 @@ def question():
 
 if __name__ == '__main__':
     app_rag.add("./docs/tunelSecagem.pdf")
-    app.run(debug=True)
+    app.run(debug=True, host = '0.0.0.0',port=5000)
