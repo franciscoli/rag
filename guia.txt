@@ -25,7 +25,33 @@ embedder:
 o tópico "llm" define a inicialização do Large Language Model, aqui estamos a definir que o providenciador é o gpt4all e depois a estabelecer algumas configurações para a execução desse modelo
 o "model" é o default para modelos locais da framework embedchain, mais exemplos de config files podem ser obtidos em https://github.com/embedchain/embedchain/tree/main/configs, tendo em atenção que a maior parte deles necessitam de api keys externas como a OPENAI API KEY
 o embedder vai ser o algoritmo que irá transformar os documentos locais (exemplo do tunelSecagem.pdf) ou paginas web em vetores que possam ser interpretados pelas LLMs
+#### Modelos Locais
 
+- Os modelos locais são corridos através do LLM provider gpt4all. 
+- Os modelos disponíveis estão descritos neste [URL](https://raw.githubusercontent.com/nomic-ai/gpt4all/main/gpt4all-chat/metadata/models3.json).
+
+Deverá ser dada especial atenção ao parâmetro "filename" de cada modelo, porque é esse mesmo nome que é referenciado na `config.yaml` do projeto. Por exemplo:
+
+```yaml
+llm:
+  provider: gpt4all
+  config:
+    model: 'orca-mini-3b-gguf2-q4_0.gguf'
+    max_tokens: 1000
+    top_p: 1
+embedder:
+  provider: huggingface
+  config:
+    model: 'sentence-transformers/all-MiniLM-L6-v2'
+```
+
+O modelo é o mesmo do `filename` do URL. O modelo usado no exemplo é `orca-mini-3b`. Se quiséssemos usar o `falcon-7b`, por exemplo, teríamos de mudar `'orca-mini-3b-gguf2-q4_0.gguf'` para `gpt4all-falcon-newbpe-q4_0.gguf`.
+
+#### Considerações sobre o Uso dos Modelos
+
+- A primeira vez que corremos a app com um modelo novo, é feito o download do modelo, o que torna a primeira execução mais lenta. Os modelos variam bastante em tamanho; por exemplo, o `falcon-7b` possui cerca de 5GB. Este número aumenta com o número de parâmetros (e.g. 3b, 7b, 13b, 70b, etc.).
+- A primeira vez que novos documentos são introduzidos também será mais lenta, uma vez que haverá um processamento inicial desses documentos.
+- Modelos não locais (que não usam o gpt4all) terão de usar uma API key diferente para cada provider, como OpenAI, Anthropic, Google, etc.
 
 def generate_response(question):
     # Simple example of generating a respocnse based on the question
